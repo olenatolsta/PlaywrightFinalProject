@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@helpers/*": ["helpers/*"],
+      "@utilities/*": ["utilities/*"],
+      "@page-manager": ["page-object-models/page-manager.ts"],
+      "@pages/*": ["page-object-models/pages/*"],
+      "@fixtures/*": ["fixtures/*"]
+    },
+    "types": ["node"],
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  }
+}

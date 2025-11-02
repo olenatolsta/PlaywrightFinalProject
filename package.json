@@ -1,0 +1,22 @@
+{
+  "name": "Playwright course",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": ""
+  },
+  "keywords": [],
+  "author": "Olena Tolsta",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.17.1",
+    "tsconfig-paths": "^4.2.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "zod": "^4.0.16"
+  }
+}
