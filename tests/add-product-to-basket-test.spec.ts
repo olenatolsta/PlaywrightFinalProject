@@ -8,8 +8,8 @@ test.describe(`Tests related to filling in the basket with random products and r
   test(
     `OTTest-001 Setup filters and add several products into a basket`,
     { tag: "@smoke @OTTest-001" },
-    async ({ pageManager, openBaseUrl }) => {
-      await openBaseUrl;
+    async ({ pageManager }) => {
+      await pageManager.openHomePage();
 
       await test.step(`Setup price limits, categories, brands, change greed to list view`, async () => {
         //Search for a specific product
