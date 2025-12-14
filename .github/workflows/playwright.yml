@@ -8,7 +8,7 @@ on:
 
 jobs:
   playwright:
-    runs-on: windows
+    runs-on: linux
 
     steps:
       - name: Checkout repository
