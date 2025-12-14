@@ -90,6 +90,14 @@ export class PageManager {
     await this.page.waitForLoadState("domcontentloaded");
   }
 
+  public async closeCartPage() {
+    await this.page.waitForLoadState("domcontentloaded");
+    const closePopupButton = this.page
+      .locator(`*[role='dialog']`)
+      .locator(`button[aria-label='Close this dialog']`);
+    await closePopupButton.click();
+  }
+
   /**
    * Navigates to Wishlist
    */

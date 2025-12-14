@@ -3,13 +3,16 @@ import { Locator, Page } from "@playwright/test";
 
 export class ProductPage extends BaseHelper {
   public readonly actualNumberOfProducts: Locator;
+  public readonly showMoreBButton: Locator;
 
   public constructor(page: Page) {
     super(page);
     this.actualNumberOfProducts = page.locator(
       `form[data-oc-load='https://sota.store/ua/checkout-cart-list']`
     );
-    //TODO expect on actual number of added products
+    this.showMoreBButton = page
+      .locator('[class*="manufacturer"]')
+      .filter({ hasText: "Показати ще" });
   }
 
   /**
@@ -81,6 +84,9 @@ export class ProductPage extends BaseHelper {
       let brandLocator = await this.page
         .locator(`[class='cf-table cf-checkbox man ']`, { hasText: brand })
         .locator(`input[type='checkbox']:not(:checked)`);
+      if (this.showMoreBButton.isVisible()) {
+        this.showMoreBButton.click();
+      }
       await brandLocator.click();
       await this.page.waitForLoadState("domcontentloaded");
     }
@@ -101,9 +107,7 @@ export class ProductPage extends BaseHelper {
     const buyButton = await this.page.locator(`button[type='submit']`, {
       hasText: "Купити",
     });
-    const closePopupButton = this.page
-      .locator(`*[role='dialog']`)
-      .locator(`button[aria-label='Close this dialog']`);
+    await this.page.waitForLoadState("domcontentloaded");
     let count = await buyButton.count();
     if (count === 0) {
       return;
@@ -111,12 +115,15 @@ export class ProductPage extends BaseHelper {
     let addedProducts = 0;
     const products = Math.min(numberOfProductsToAdd, count);
     while (addedProducts < products) {
+      await this.page.waitForLoadState("domcontentloaded");
       const purchase = await buyButton.nth(addedProducts);
       if (await purchase.isVisible()) {
         await purchase.click({ force: true });
         await this.page.waitForLoadState("domcontentloaded");
-        await closePopupButton.click();
-        await this.page.waitForLoadState("domcontentloaded");
+        await this.page
+          .locator(`*[role='dialog']`)
+          .locator(`button[aria-label='Close this dialog']`)
+          .click();
       }
       addedProducts++;
     }

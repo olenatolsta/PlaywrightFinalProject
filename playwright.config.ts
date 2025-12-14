@@ -18,7 +18,7 @@ dotenvConfig({
  * Done using https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  timeout: 120_000,
+  timeout: 60_000,
   testDir: "./tests",
   /* Do not run all the tests in parallel */
   fullyParallel: false,
@@ -31,7 +31,10 @@ export default defineConfig({
   use: {
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
-    headless: false,
+    headless: !!process.env.CI,
+    viewport: { width: 1280, height: 720 },
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
   },
 
   /* Configure project for major browsers */
@@ -47,6 +50,7 @@ export default defineConfig({
         storageState: "playwright/.authentication/user1.json",
         launchOptions: { slowMo: 50 }, // adds a slight human-like delay
       },
+      // For all the tests except for authorization test. Here the cookies are cleared
       dependencies: ["authentication"],
     },
   ],

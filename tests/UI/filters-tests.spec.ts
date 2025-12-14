@@ -44,10 +44,8 @@ test.describe(`Filtering product, adding and removing products from cart`, () =>
             .onProductPage()
             .setCategoryFilters(productName);
           //Select brands in the filter
-          //await new Promise((resolve) => setTimeout(resolve, 1000));
           await user1PageManager.onProductPage().selectBrands(brands);
           //Change Greed view to List view
-          //await new Promise((resolve) => setTimeout(resolve, 1000));
           await user1PageManager.onProductPage().changeGreedToListView();
         });
 
@@ -56,6 +54,7 @@ test.describe(`Filtering product, adding and removing products from cart`, () =>
           const currentCount = await user1PageManager
             .onCartPage()
             .calculateProductsInCart();
+          await user1PageManager.closeCartPage();
           const added = await user1PageManager
             .onProductPage()
             .addProductsToCart(Data.productDetails.numberOfProducts);
@@ -78,15 +77,18 @@ test.describe(`Filtering product, adding and removing products from cart`, () =>
           await expect(
             user1PageManager.onProductPage().actualNumberOfProducts
           ).toHaveCount(productsAfterDelete);
+          await user1PageManager.closeCartPage();
         });
 
         await test.step(`Remove all products from the cart`, async () => {
+          await user1PageManager.openCartPage();
           let remainingProducts = await user1PageManager
             .onCartPage()
             .calculateProductsInCart();
           await user1PageManager
             .onCartPage()
             .removeAllProductsFromCart(remainingProducts);
+          await user1PageManager.closeCartPage();
           //Make sure all the products are removed from the basket
           await expect(
             user1PageManager.onProductPage().actualNumberOfProducts
