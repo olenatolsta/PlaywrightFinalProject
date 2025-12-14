@@ -9,3 +9,6 @@ node_modules/
 playwright/.authentication
 *.env
 testresults.xml
+
+playwright\.authentication\user1.json
+playwright\.authentication\user2.json

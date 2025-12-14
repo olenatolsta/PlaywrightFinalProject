@@ -42,12 +42,12 @@ export const test = base.extend<TestFixtures>({
 });
 
 // User storage fixtures
-export const user1Test = base.extend({
-  storageState: "user1.json",
+export const user1Test = test.extend({
+  storageState: "playwright/.authentication/user1.json",
 });
 
-export const user2Test = base.extend({
-  storageState: "user2.json",
+export const user2Test = test.extend({
+  storageState: "playwright/.authentication/user2.json",
 });
 
 export { expect };

@@ -1,12 +1,10 @@
 import { test, expect } from "@fixtures/fixtures";
 import * as Data from "@helpers/test-data.helper";
-import playwrightConfig from "playwright.config";
 
 test(
   `OTTest-001 Authorize a new user on registration screen`,
   { tag: "@smoke @OTTest-001" },
   async ({ pageManager }) => {
-    const info = test.info();
     //if (info.project.name != "no-auth") return; // for Debug;
     await pageManager.clearState();
     await pageManager.openAccountRegisterPage();
