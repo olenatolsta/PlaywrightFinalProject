@@ -1,46 +1,92 @@
 import { Locator, Page } from '@playwright/test';
+import {
+  StorageStateUser1,
+  StorageStateUser2,
+} from '@helpers/test-data.helper';
 import { BaseHelper } from '@helpers/base.helper';
+import { Browser } from 'playwright';
+import { PageManager } from '@page-manager';
+import environment from '@utilities/environment';
 
 export class LoginPage extends BaseHelper {
-  private readonly ioIdentityToggle: Locator;
-
-  private readonly loginButton: Locator;
-
-  private readonly skipCheckbox: Locator;
+  public readonly generalLoginButton: Locator;
+  public readonly generalLoggedInIcon: Locator;
+  private readonly emailLoginButton: Locator;
+  private readonly loginSubmitButton: Locator;
+  private readonly logoutButton: Locator;
 
   public constructor(page: Page) {
     super(page);
-    this.ioIdentityToggle = page.getByText('Use io.Identity Login');
-    this.loginButton = page.locator('#ButtonLogin, #IOLoginButton');
-    this.skipCheckbox = page.locator('input#SkipCheckbox');
+
+    this.emailLoginButton = page
+      .locator(`[class='login-content']`)
+      .getByRole('button', { name: 'Увійти через пошту' });
+    this.loginSubmitButton = page
+      .locator(`[id='account-login']`)
+      .filter({ hasText: 'Увійти' });
   }
 
   /**
-   * Performs login actions using ioIdentity.
+   * Performs login actions via email.
    * @param {string} username - Specifies users email.
    * @param {string} password - Specifies password.
    */
   public async userLogin(username: string, password: string) {
-    if (await this.ioIdentityToggle.isVisible()) {
-      await this.ioIdentityToggle.click();
+    if (await this.emailLoginButton.isVisible()) {
+      await this.emailLoginButton.click();
     }
-    await this.page.locator('input[id="email"]').fill(username);
-    await this.page.locator('input[id="password"]').fill(password);
-    await this.loginButton.click();
+    await this.page
+      .locator(`[class='login-content']`)
+      .locator(`input[id='input-email']`)
+      .fill(username);
+    await this.page
+      .locator(`[class='login-content']`)
+      .locator(`input[id='input-password']`)
+      .fill(password);
+    await this.loginSubmitButton.click();
   }
 
-  /**
-   * Selects specified 'Tenant' and 'Language' on the 'Welcome Screen' and then proceeds with logging in.
-   * @param {string} tenant - Specifies the 'Tenant' to be selected.
-   * @param {string} language - Specifies the 'Language' to be selected.
-   */
-  public async welcomeScreenLogin(tenant: string, language: string, skipWelcomeScreen = true) {
-    await this.page.locator('#MandatorDropDown').selectOption(tenant);
-    await this.page.locator('#LanguageDropDown').selectOption(language);
-    const isChecked = await this.skipCheckbox.isChecked();
-    if (skipWelcomeScreen && isChecked) {
-      await this.page.getByLabel('Skip this screen').uncheck();
+  public async userLogout(username: string) {
+    const accountIcon = this.page
+      .locator(`a[class='icon tooltipstered']`)
+      .filter({ hasText: username.split(/[@.]/)[0] });
+    if (await accountIcon.isVisible()) {
+      await accountIcon.click();
     }
-    await this.loginButton.click();
+    await this.page.locator(`a[class='btn btn-pink']`).filter({ hasText: 'Вийти з облікового запису' }).click();
   }
+}
+
+/**
+ * Creates a new page manager for user 1.
+ * Also navigates to the base URL.
+ * @param browser The browser instance.
+ * @returns The page manager for user 1.
+ */
+export async function createPageManagerForUser1(
+  browser: Browser
+): Promise<PageManager> {
+  const user1Page = await browser.newPage({ storageState: StorageStateUser1 });
+  const user1PageManager = new PageManager(user1Page);
+
+  await user1Page.goto(environment.BASE_URL);
+
+  return user1PageManager;
+}
+
+/**
+ * Creates a new page manager for user 2.
+ * Also navigates to the base URL.
+ * @param browser The browser instance.
+ * @returns The page manager for user 2.
+ */
+export async function createPageManagerForUser2(
+  browser: Browser
+): Promise<PageManager> {
+  const user2Page = await browser.newPage({ storageState: StorageStateUser2 });
+  const user2PageManager = new PageManager(user2Page);
+
+  await user2Page.goto(environment.BASE_URL);
+
+  return user2PageManager;
 }

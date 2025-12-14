@@ -1,24 +1,25 @@
 import { BaseHelper } from "@helpers/base.helper";
 import { Locator, Page } from "@playwright/test";
-import environment from "@utilities/environment";
 
-export class HomePage extends BaseHelper {
+export class ProductPage extends BaseHelper {
   public readonly actualNumberOfProducts: Locator;
 
   public constructor(page: Page) {
     super(page);
     this.actualNumberOfProducts = page.locator(
-      'form[data-oc-load="https://sota.store/ua/checkout-cart-list"]'
+      `form[data-oc-load='https://sota.store/ua/checkout-cart-list']`
     );
+    //TODO expect on actual number of added products
   }
 
   /**
    * Gets a locator of a counter showing the number of products added to a cart
    */
-  get cartCounter(): Locator {
+  get cartCounter(): Promise<string> {
     return this.page
-      .locator('[id="header-cart"]')
-      .locator('span[class="icon-counter"]');
+      .locator(`[id='header-cart']`)
+      .locator(`span[class='icon-counter']`)
+      .innerText();
   }
 
   /**
@@ -28,7 +29,7 @@ export class HomePage extends BaseHelper {
   public async searchForProduct(product: string) {
     await this.page.getByPlaceholder("Пошук товарів...").fill(product);
     await this.page
-      .locator('[class^="col-lg-auto"]')
+      .locator(`[class^='col-lg-auto']`)
       .getByText("Знайти")
       .click();
   }
@@ -39,9 +40,9 @@ export class HomePage extends BaseHelper {
    * @param maxPrice - max product price
    */
   public async setPriceLimits(minPrice: number, maxPrice: number) {
-    let controlMinPrice = await this.page.locator('input[name="price[from]"]');
+    let controlMinPrice = await this.page.locator(`input[name='price[from]']`);
     await controlMinPrice.fill(minPrice.toString());
-    let controlMaxPrice = await this.page.locator('input[name="price[to]"]');
+    let controlMaxPrice = await this.page.locator(`input[name='price[to]']`);
     await controlMaxPrice.focus();
     await this.page.waitForLoadState("domcontentloaded");
     await controlMaxPrice.fill(maxPrice.toString());
@@ -55,28 +56,19 @@ export class HomePage extends BaseHelper {
    */
 
   public async setCategoryFilters(productName: string) {
+    await this.page.waitForLoadState("domcontentloaded");
     let categoryControls = await this.page
-      .locator('[class="cf-table cf-checkbox cat "]', { hasText: productName })
-      .locator('input[type="checkbox"]');
-
+      .locator(`[class='cf-table cf-checkbox cat ']`, { hasText: productName })
+      .locator(`input[type='checkbox']:not(:checked)`);
     const count = await categoryControls.count();
-
     if (count === 0) {
-      await console.log("No related category controls found");
       return;
     }
-
-    await console.log(`Found ${count} category controls`);
-
-    const category = await categoryControls.nth(0);
+    const category = await categoryControls.first();
     if (await category.isVisible()) {
       await category.click({ force: true });
-      await console.log(`Clicked control`);
-      await this.page.waitForLoadState("domcontentloaded");
       // Used recursion instead of loop to make sure locators array is always fresh after page re-rendering
       await this.setCategoryFilters(productName);
-    } else {
-      await console.log(`Category control not visible`);
     }
   }
 
@@ -87,9 +79,8 @@ export class HomePage extends BaseHelper {
   public async selectBrands(brands: string[]) {
     for (const brand of brands) {
       let brandLocator = await this.page
-        .locator('[class="cf-table cf-checkbox man "]', { hasText: brand })
-        .locator('input[type="checkbox"]');
-      //await this.page.locator('[class*="cf-manufacturer"]').locator('.more').click();
+        .locator(`[class='cf-table cf-checkbox man ']`, { hasText: brand })
+        .locator(`input[type='checkbox']:not(:checked)`);
       await brandLocator.click();
       await this.page.waitForLoadState("domcontentloaded");
     }
@@ -99,66 +90,36 @@ export class HomePage extends BaseHelper {
    * Changes view from default greed view to list view
    */
   public async changeGreedToListView() {
-    await this.page.locator('button[id="button-list"]').click();
+    await this.page.locator(`button[id='button-list']`).click();
   }
 
   /**
    * Adds several products to a basket
    * @param numberOfProductsToAdd - the name of products that should be added into a basket
    */
-  public async addProductsToBasket(numberOfProductsToAdd) {
-    const buyButton = await this.page.locator('button[type="submit"]', {
+  public async addProductsToCart(numberOfProductsToAdd): Promise<number> {
+    const buyButton = await this.page.locator(`button[type='submit']`, {
       hasText: "Купити",
     });
     const closePopupButton = this.page
-      .locator('*[role="dialog"]')
-      .locator('button[aria-label="Close this dialog"]');
-
+      .locator(`*[role='dialog']`)
+      .locator(`button[aria-label='Close this dialog']`);
     let count = await buyButton.count();
-
     if (count === 0) {
-      await console.log("No products selected");
       return;
     }
-
     let addedProducts = 0;
-    while (addedProducts < numberOfProductsToAdd) {
+    const products = Math.min(numberOfProductsToAdd, count);
+    while (addedProducts < products) {
       const purchase = await buyButton.nth(addedProducts);
       if (await purchase.isVisible()) {
         await purchase.click({ force: true });
-        await console.log(`Clicked control`);
         await this.page.waitForLoadState("domcontentloaded");
         await closePopupButton.click();
         await this.page.waitForLoadState("domcontentloaded");
-      } else {
-        await console.log(`Buy button is not visible`);
       }
       addedProducts++;
     }
-  }
-
-  /**
-   * Navigates to and opens a basket
-   */
-  public async navigateToBasket() {
-    await this.page.locator('[id="header-cart"]').click();
-  }
-
-  /**
-   * Remove every second product from a basket
-   * @param numberOfProducts - total number of products added to a basket
-   * @returns remaining number of products
-   */
-  public async removeEachSecondProductFromBasket(
-    numberOfProducts: number
-  ): Promise<number> {
-    const n = Math.floor(numberOfProducts / 2);
-
-    for (let i = 0, j = 1; i < n; i++, j++) {
-      await this.page.locator('button[class^="btn btn-delete"]').nth(j).click();
-      await this.page.waitForLoadState("domcontentloaded");
-    }
-
-    return numberOfProducts - n;
+    return addedProducts;
   }
 }

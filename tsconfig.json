@@ -6,7 +6,8 @@
       "@utilities/*": ["utilities/*"],
       "@page-manager": ["page-object-models/page-manager.ts"],
       "@pages/*": ["page-object-models/pages/*"],
-      "@fixtures/*": ["fixtures/*"]
+      "@fixtures/*": ["fixtures/*"],
+      "@api/*": ["tests/api/*"]
     },
     "types": ["node"],
     "resolveJsonModule": true,

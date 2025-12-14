@@ -1,8 +1,24 @@
 {
-    "cSpell.words": [
-        "Знайти",
-        "Купити",
-        "Планшет",
-        "Пошук"
-    ]
+  "cSpell.words": [
+    "Знайти",
+    "Купити",
+    "Планшет",
+    "Пошук",
+    "Реєстрація"
+  ],
+  "editor.formatOnSave": true,
+  "eslint.format.enable": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "eslint.validate": [
+    "typescript",
+    "javascript"
+  ],
+  // Force TS recognition
+  "files.associations": {
+    "*.ts": "typescript"
+  },
+  // Keep JSONC working
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  }
 }
