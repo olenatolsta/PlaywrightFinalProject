@@ -1,5 +1,6 @@
 import { BaseHelper } from "@helpers/base.helper";
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
+import { exec } from "child_process";
 
 export class ProductPage extends BaseHelper {
   public readonly actualNumberOfProducts: Locator;
@@ -11,8 +12,9 @@ export class ProductPage extends BaseHelper {
       `form[data-oc-load='https://sota.store/ua/checkout-cart-list']`
     );
     this.showMoreBButton = page
-      .locator('[class*="manufacturer"]')
-      .filter({ hasText: "Показати ще" });
+      .locator('[class*="cf-manufacturer"]')
+      .locator('a[data-bs-toggle="collapse"]');
+    //.filter({ hasText: "Показати ще" });
   }
 
   /**
@@ -37,6 +39,17 @@ export class ProductPage extends BaseHelper {
       .click();
   }
 
+  private async ajaxWait(timeout = 5_000) {
+    await expect(this.page.locator("html")).not.toHaveClass(
+      /cl-filter-loading/,
+      { timeout }
+    );
+    await expect(this.page.locator("html")).not.toHaveClass(
+      /cl-popup-loading/,
+      { timeout }
+    );
+  }
+
   /**
    * Sets price limits in price filter
    * @param minPrice - min product price
@@ -47,10 +60,10 @@ export class ProductPage extends BaseHelper {
     await controlMinPrice.fill(minPrice.toString());
     let controlMaxPrice = await this.page.locator(`input[name='price[to]']`);
     await controlMaxPrice.focus();
-    await this.page.waitForLoadState("domcontentloaded");
+    await this.ajaxWait();
     await controlMaxPrice.fill(maxPrice.toString());
     await controlMinPrice.focus();
-    await this.page.waitForLoadState("domcontentloaded");
+    await this.ajaxWait();
   }
 
   /**
@@ -59,9 +72,9 @@ export class ProductPage extends BaseHelper {
    */
 
   public async setCategoryFilters(productName: string) {
-    await this.page.waitForLoadState("domcontentloaded");
+    await this.ajaxWait();
     let categoryControls = await this.page
-      .locator(`[class='cf-table cf-checkbox cat ']`, { hasText: productName })
+      .locator(`[class^='cf-table cf-checkbox cat']`, { hasText: productName })
       .locator(`input[type='checkbox']:not(:checked)`);
     const count = await categoryControls.count();
     if (count === 0) {
@@ -69,8 +82,8 @@ export class ProductPage extends BaseHelper {
     }
     const category = await categoryControls.first();
     if (await category.isVisible()) {
-      await category.click({ force: true });
-      // Used recursion instead of loop to make sure locators array is always fresh after page re-rendering
+      await category.click();
+      await this.ajaxWait();
       await this.setCategoryFilters(productName);
     }
   }
@@ -81,14 +94,19 @@ export class ProductPage extends BaseHelper {
    */
   public async selectBrands(brands: string[]) {
     for (const brand of brands) {
-      let brandLocator = await this.page
-        .locator(`[class='cf-table cf-checkbox man ']`, { hasText: brand })
-        .locator(`input[type='checkbox']:not(:checked)`);
-      if (this.showMoreBButton.isVisible()) {
-        this.showMoreBButton.click();
+      const cnt = await this.showMoreBButton.count();
+      const attr = await this.showMoreBButton.getAttribute("aria-expanded");
+      if (cnt === 1 && (attr === null || attr === "false")) {
+        await this.showMoreBButton.click();
+        await this.ajaxWait();
       }
-      await brandLocator.click();
-      await this.page.waitForLoadState("domcontentloaded");
+      let brandLocator = await this.page
+        .locator(`[class^='cf-table cf-checkbox man']`, { hasText: brand })
+        .locator(`input[type='checkbox']:not(:checked)`);
+      if ((await brandLocator.count()) > 0) {
+        await brandLocator.first().click();
+        await this.ajaxWait();
+      }
     }
   }
 
@@ -107,23 +125,23 @@ export class ProductPage extends BaseHelper {
     const buyButton = await this.page.locator(`button[type='submit']`, {
       hasText: "Купити",
     });
-    await this.page.waitForLoadState("domcontentloaded");
+    await expect(buyButton).not.toHaveCount(0);
     let count = await buyButton.count();
-    if (count === 0) {
-      return;
-    }
     let addedProducts = 0;
     const products = Math.min(numberOfProductsToAdd, count);
     while (addedProducts < products) {
-      await this.page.waitForLoadState("domcontentloaded");
+      await this.ajaxWait();
       const purchase = await buyButton.nth(addedProducts);
+      await expect(purchase).toBeVisible();
       if (await purchase.isVisible()) {
-        await purchase.click({ force: true });
-        await this.page.waitForLoadState("domcontentloaded");
-        await this.page
+        await purchase.click();
+        await this.ajaxWait();
+        const cartClose = this.page
           .locator(`*[role='dialog']`)
-          .locator(`button[aria-label='Close this dialog']`)
-          .click();
+          .locator(`button[aria-label='Close this dialog']`);
+        if (await cartClose.isVisible()) {
+          await cartClose.click();
+        }
       }
       addedProducts++;
     }

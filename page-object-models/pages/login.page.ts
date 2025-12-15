@@ -1,29 +1,28 @@
-import { Locator, Page } from '@playwright/test';
+import { Locator, Page } from "@playwright/test";
 import {
   StorageStateUser1,
   StorageStateUser2,
-} from '@helpers/test-data.helper';
-import { BaseHelper } from '@helpers/base.helper';
-import { Browser } from 'playwright';
-import { PageManager } from '@page-manager';
-import environment from '@utilities/environment';
+} from "@helpers/test-data.helper";
+import { BaseHelper } from "@helpers/base.helper";
+import { Browser } from "playwright";
+import { PageManager } from "@page-manager";
+import environment from "@utilities/environment";
 
 export class LoginPage extends BaseHelper {
   public readonly generalLoginButton: Locator;
   public readonly generalLoggedInIcon: Locator;
   private readonly emailLoginButton: Locator;
   private readonly loginSubmitButton: Locator;
-  private readonly logoutButton: Locator;
 
   public constructor(page: Page) {
     super(page);
 
     this.emailLoginButton = page
       .locator(`[class='login-content']`)
-      .getByRole('button', { name: 'Увійти через пошту' });
+      .getByRole("button", { name: "Увійти через пошту" });
     this.loginSubmitButton = page
       .locator(`[id='account-login']`)
-      .filter({ hasText: 'Увійти' });
+      .filter({ hasText: "Увійти" });
   }
 
   /**
@@ -53,40 +52,9 @@ export class LoginPage extends BaseHelper {
     if (await accountIcon.isVisible()) {
       await accountIcon.click();
     }
-    await this.page.locator(`a[class='btn btn-pink']`).filter({ hasText: 'Вийти з облікового запису' }).click();
+    await this.page
+      .locator(`a[class='btn btn-pink']`)
+      .filter({ hasText: "Вийти з облікового запису" })
+      .click();
   }
-}
-
-/**
- * Creates a new page manager for user 1.
- * Also navigates to the base URL.
- * @param browser The browser instance.
- * @returns The page manager for user 1.
- */
-export async function createPageManagerForUser1(
-  browser: Browser
-): Promise<PageManager> {
-  const user1Page = await browser.newPage({ storageState: StorageStateUser1 });
-  const user1PageManager = new PageManager(user1Page);
-
-  await user1Page.goto(environment.BASE_URL);
-
-  return user1PageManager;
-}
-
-/**
- * Creates a new page manager for user 2.
- * Also navigates to the base URL.
- * @param browser The browser instance.
- * @returns The page manager for user 2.
- */
-export async function createPageManagerForUser2(
-  browser: Browser
-): Promise<PageManager> {
-  const user2Page = await browser.newPage({ storageState: StorageStateUser2 });
-  const user2PageManager = new PageManager(user2Page);
-
-  await user2Page.goto(environment.BASE_URL);
-
-  return user2PageManager;
 }

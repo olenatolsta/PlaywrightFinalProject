@@ -6,7 +6,7 @@ import { ProductPage } from "@pages/product.page";
 import { LoginPage } from "@pages/login.page";
 import { CartPage } from "@pages/cart.page";
 import { AuthorizationPage } from "@pages/authorization.page";
-import { ProductDetailsPage } from "@pages/productDetails.page";
+import { ProductDetailsPage } from "@pages/product-details.page";
 
 export class PageManager {
   private readonly page: Page;

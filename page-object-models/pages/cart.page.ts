@@ -51,7 +51,10 @@ export class CartPage extends BaseHelper {
   public async removeAllProductsFromCart(numberOfProducts: number) {
     const n = numberOfProducts;
     for (let i = 0; i < n; i++) {
-      await this.page.locator(`button[class^='btn btn-delete']`).nth(0).click();
+      await this.page
+        .locator(`button[class^='btn btn-delete']`)
+        .first()
+        .click();
       await this.page.waitForLoadState("domcontentloaded");
     }
   }

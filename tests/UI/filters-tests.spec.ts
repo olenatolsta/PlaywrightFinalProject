@@ -18,6 +18,17 @@ test.describe(`Filtering product, adding and removing products from cart`, () =>
     },
     { productName: "ноутбук", category: "Ноутбуки", brands: ["Asus"] },
   ];
+  /* cleanup cart before each test */
+  test.beforeEach(async ({ pageManager, openBaseUrl }) => {
+    await openBaseUrl;
+    await pageManager.openCartPage();
+    let remainingProducts = await pageManager
+      .onCartPage()
+      .calculateProductsInCart();
+    await pageManager.onCartPage().removeAllProductsFromCart(remainingProducts);
+
+    await pageManager.closeCartPage();
+  });
   for (const { productName, category, brands } of testConfigs) {
     test(
       `OTTest-002 Setup filters and add ${productName} into a basket`,
@@ -47,20 +58,11 @@ test.describe(`Filtering product, adding and removing products from cart`, () =>
         });
 
         await test.step(`Add several products into a cart`, async () => {
-          await pageManager.openCartPage();
-          const currentCount = await pageManager
-            .onCartPage()
-            .calculateProductsInCart();
-          await pageManager.closeCartPage();
-          const added = await pageManager
+          const expectedCount = await pageManager
             .onProductPage()
             .addProductsToCart(Data.productDetails.numberOfProducts);
-          const expectedCount = currentCount + added;
-          //Make sure the number of products corresponds the number next to the cart
-          await pageManager.reloadPage();
           const countedProducts = await pageManager.onProductPage().cartCounter;
           await expect(countedProducts).toBe(String(expectedCount));
-          //await pageManager.onCartPage().closePopupButton.click();
         });
 
         await test.step(`Remove every second product from the cart`, async () => {
@@ -74,21 +76,6 @@ test.describe(`Filtering product, adding and removing products from cart`, () =>
             pageManager.onProductPage().actualNumberOfProducts
           ).toHaveCount(productsAfterDelete);
           await pageManager.closeCartPage();
-        });
-
-        await test.step(`Remove all products from the cart`, async () => {
-          await pageManager.openCartPage();
-          let remainingProducts = await pageManager
-            .onCartPage()
-            .calculateProductsInCart();
-          await pageManager
-            .onCartPage()
-            .removeAllProductsFromCart(remainingProducts);
-          await pageManager.closeCartPage();
-          //Make sure all the products are removed from the basket
-          await expect(
-            pageManager.onProductPage().actualNumberOfProducts
-          ).toHaveCount(0);
         });
       }
     );

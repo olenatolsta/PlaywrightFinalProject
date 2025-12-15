@@ -1,6 +1,5 @@
 import { BaseHelper } from "@helpers/base.helper";
 import { Locator, Page } from "@playwright/test";
-import { publicDecrypt } from "crypto";
 
 export class ProductDetailsPage extends BaseHelper {
   public readonly catalogSection: Locator;
